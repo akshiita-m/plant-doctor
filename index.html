@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Plant Doctor AR</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+  <!-- Start screen -->
+  <div id="intro" class="screen">
+    <div class="intro-card">
+      <div class="logo">🌱🤖</div>
+      <h1>Plant Doctor</h1>
+      <p class="tagline">Sense · Decide · Act</p>
+      <p>Help a farm robot look after a crop. At each step, predict what the robot should do before it acts.</p>
+      <ol>
+        <li>Put the Plant Doctor card on a table.</li>
+        <li>Press Start and allow the camera.</li>
+        <li>Point the camera at the card.</li>
+      </ol>
+      <button id="startBtn" class="primary">Start</button>
+    </div>
+  </div>
+
+  <!-- Shown while the card is not in view -->
+  <div id="scanHint" class="hidden">Point the camera at the Plant Doctor card</div>
+
+  <!-- Progress and question panel -->
+  <div id="topbar" class="hidden">
+    <div id="dots"></div>
+    <div id="stageName"></div>
+  </div>
+  <div id="panel" class="hidden">
+    <h2 id="title"></h2>
+    <p id="text"></p>
+    <div id="readings" class="hidden">
+      <div class="reading">
+        <span class="label">💧 Soil moisture</span>
+        <div class="bar"><div id="moistureFill"></div></div>
+        <span id="moistureValue" class="value"></span>
+      </div>
+      <div class="reading">
+        <span class="label">🧪 Soil pH</span>
+        <div class="bar ph"><div id="phMarker"></div></div>
+        <span id="phValue" class="value"></span>
+      </div>
+    </div>
+    <p id="question"></p>
+    <div id="options"></div>
+    <p id="feedback"></p>
+    <button id="nextBtn" class="primary hidden">Next</button>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./assets/marker.mind; autoStart: false; uiScanning: no; uiLoading: no"
+    color-space="sRGB" renderer="colorManagement: true; antialias: true"
+    vr-mode-ui="enabled: false" xr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="0.5 1 1.5"></a-entity>
+
+    <!-- Everything inside this entity sits on the card.
+         x: left to right, y: up the card, z: out of the card towards the camera.
+         The card is 1 unit wide and 0.667 units tall. -->
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+
+      <!-- Soil patch around the drooping plant. Its colour shows how wet the soil is. -->
+      <a-circle id="soilPatch" radius="0.11" color="#6d4c41" position="0 0.06 0.002"></a-circle>
+
+      <!-- Crop row -->
+      <a-entity id="plants">
+        <a-entity class="plant" position="-0.36 0.06 0"></a-entity>
+        <a-entity class="plant" position="-0.18 0.06 0"></a-entity>
+        <a-entity id="sickPlant" position="0 0.06 0"></a-entity>
+        <a-entity class="plant" position="0.18 0.06 0"></a-entity>
+        <a-entity class="plant" position="0.36 0.06 0"></a-entity>
+      </a-entity>
+
+      <!-- Robot -->
+      <a-entity id="robot" position="-0.5 -0.1 0">
+        <a-box color="#1e88e5" width="0.16" height="0.09" depth="0.06" position="0 0 0.045"></a-box>
+        <a-box color="#0d47a1" width="0.14" height="0.07" depth="0.006" position="0 0 0.078"></a-box>
+        <a-box color="#263238" width="0.05" height="0.04" depth="0.045" position="0.05 0 0.1"></a-box>
+        <a-sphere id="eye" color="#ffeb3b" radius="0.012" position="0.075 0 0.105"
+          animation="property: scale; from: 1 1 1; to: 1 1 0.2; dur: 180; dir: alternate; loop: true; delay: 2500"></a-sphere>
+        <a-cylinder color="#455a64" radius="0.003" height="0.06" rotation="90 0 0" position="-0.055 0.02 0.11"></a-cylinder>
+        <a-sphere color="#e53935" radius="0.009" position="-0.055 0.02 0.142"></a-sphere>
+        <a-cylinder color="#212121" radius="0.024" height="0.016" position="-0.05 0.053 0.024"></a-cylinder>
+        <a-cylinder color="#212121" radius="0.024" height="0.016" position="0.05 0.053 0.024"></a-cylinder>
+        <a-cylinder color="#212121" radius="0.024" height="0.016" position="-0.05 -0.053 0.024"></a-cylinder>
+        <a-cylinder color="#212121" radius="0.024" height="0.016" position="0.05 -0.053 0.024"></a-cylinder>
+        <a-cylinder id="probe" color="#b0bec5" radius="0.005" height="0.07" rotation="90 0 0" position="0.1 0.03 0.07"></a-cylinder>
+      </a-entity>
+
+      <!-- Reading label that floats above the robot -->
+      <a-entity id="readingLabel" visible="false" position="0 0.24 0.2">
+        <a-plane color="#ffffff" opacity="0.92" width="0.42" height="0.07"></a-plane>
+        <a-text id="readingText" value="" color="#1b5e20" align="center" width="0.75" position="0 0 0.001"></a-text>
+      </a-entity>
+
+      <!-- Actions -->
+      <a-entity id="water" visible="false" position="0 0.06 0.25">
+        <a-sphere color="#29b6f6" radius="0.011" position="-0.025 0 0"></a-sphere>
+        <a-sphere color="#29b6f6" radius="0.011" position="0.02 0.01 0.04"></a-sphere>
+        <a-sphere color="#29b6f6" radius="0.011" position="0 -0.01 0.08"></a-sphere>
+      </a-entity>
+      <a-entity id="flag" visible="false" position="0.07 0.09 0">
+        <a-cylinder color="#5d4037" radius="0.004" height="0.22" rotation="90 0 0" position="0 0 0.11"></a-cylinder>
+        <a-plane color="#e53935" width="0.08" height="0.05" rotation="90 0 0" position="0.04 0 0.195"
+          animation="property: rotation; from: 90 0 0; to: 90 12 0; dur: 600; dir: alternate; loop: true"></a-plane>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+:root {
+  --green: #2e7d32;
+  --green-dark: #1b5e20;
+  --cream: #fffdf5;
+  --ink: #1f2a1f;
+  --muted: #5f6b5f;
+  --right: #c8e6c9;
+  --wrong: #ffcdd2;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+.hidden { display: none !important; }
+
+/* Start screen */
+.screen {
+  position: fixed; inset: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: linear-gradient(160deg, #e8f5e9, #fff8e1);
+}
+.intro-card {
+  max-width: 420px; width: 100%; background: white; border-radius: 20px; padding: 24px;
+  box-shadow: 0 10px 30px rgba(27, 94, 32, 0.15); text-align: center;
+}
+.logo { font-size: 44px; }
+.intro-card h1 { margin: 4px 0 0; color: var(--green-dark); font-size: 30px; }
+.tagline { margin: 2px 0 14px; color: var(--green); font-weight: 600; letter-spacing: 1px; }
+.intro-card ol { text-align: left; padding-left: 22px; line-height: 1.6; }
+
+/* Scan hint */
+#scanHint {
+  position: fixed; top: 40%; left: 50%; transform: translateX(-50%); z-index: 20;
+  background: rgba(0, 0, 0, 0.65); color: white; padding: 12px 18px; border-radius: 999px;
+  font-size: 15px; text-align: center; width: max-content; max-width: 90vw;
+}
+
+/* Progress bar */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding: 10px 16px;
+  background: rgba(255, 253, 245, 0.92); display: flex; align-items: center; gap: 12px;
+}
+#dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #c5d1c5; }
+.dot.done { background: var(--green); }
+.dot.now { background: var(--green); box-shadow: 0 0 0 3px #a5d6a7; }
+#stageName { font-weight: 700; color: var(--green-dark); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Question panel */
+#panel {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--cream); padding: 12px 16px 14px; max-height: 46vh; overflow-y: auto;
+  border-radius: 18px 18px 0 0; box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.15);
+}
+#panel h2 { margin: 0 0 2px; font-size: 17px; color: var(--green-dark); }
+#text { margin: 0 0 6px; font-size: 14px; line-height: 1.4; }
+#question { font-weight: 700; margin: 10px 0 4px; font-size: 15px; }
+#feedback { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
+
+/* Readings */
+#readings { display: grid; gap: 8px; margin: 6px 0; }
+.reading { display: grid; grid-template-columns: 120px 1fr 52px; align-items: center; gap: 8px; font-size: 14px; }
+.reading .value { font-weight: 700; text-align: right; }
+.bar { height: 12px; border-radius: 6px; background: #e0e0e0; position: relative; overflow: hidden; }
+#moistureFill { height: 100%; width: 0; background: #29b6f6; transition: width 0.8s ease; }
+.bar.ph { background: linear-gradient(90deg, #e53935, #fb8c00, #fdd835, #43a047, #1e88e5, #5e35b1); overflow: visible; }
+#phMarker {
+  position: absolute; top: -4px; width: 4px; height: 20px; background: var(--ink); border-radius: 2px;
+  left: 0; transition: left 0.8s ease;
+}
+
+/* Buttons */
+button {
+  font: inherit; cursor: pointer; border-radius: 12px; padding: 10px 12px; font-size: 14px; width: 100%;
+}
+button.primary { background: var(--green); color: white; border: none; font-weight: 700; margin-top: 10px; }
+#options button { display: block; margin: 5px 0; background: white; border: 2px solid #c5d1c5; text-align: left; }
+#options button.right { background: var(--right); border-color: var(--green); }
+#options button.wrong { background: var(--wrong); border-color: #c62828; }
+
+/* Hide A-Frame's VR button, which would otherwise sit on top of the question panel */
+.a-enter-vr, .a-enter-ar { display: none !important; }
