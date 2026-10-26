@@ -79,3 +79,11 @@ button.primary { background: var(--green); color: white; border: none; font-weig
 
 /* Hide A-Frame's VR button, which would otherwise sit on top of the question panel */
 .a-enter-vr, .a-enter-ar { display: none !important; }
+
+/* Language switch */
+.lang-row { text-align: right; }
+.langBtn {
+  width: auto; padding: 6px 12px; font-size: 14px; font-weight: 600;
+  background: white; color: var(--green-dark); border: 2px solid var(--green); border-radius: 999px;
+}
+.langBtn.small { margin-left: auto; padding: 4px 10px; font-size: 13px; }
