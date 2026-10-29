@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Plant Doctor AR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Roboto+Mono:wght@500&display=swap" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -11,49 +13,71 @@
 <body>
   <!-- Start screen. Text comes from the TEXT dictionary in app.js (data-i18n keys). -->
   <div id="intro" class="screen">
-    <div class="intro-card">
-      <div class="lang-row"><button class="langBtn" type="button"></button></div>
-      <div class="logo">🌱🤖</div>
-      <h1 data-i18n="appName"></h1>
-      <p class="tagline" data-i18n="tagline"></p>
-      <p data-i18n="introText"></p>
-      <ol>
+    <div class="intro-inner">
+      <div class="intro-head">
+        <div>
+          <h1 data-i18n="appName"></h1>
+          <p class="sub" data-i18n="tagline"></p>
+        </div>
+        <div class="lang"><button type="button" data-lang="en">English</button><button type="button" data-lang="hi">हिंदी</button></div>
+      </div>
+      <div class="meet"><span class="doc big"></span><p data-i18n="introText"></p></div>
+      <p class="label" data-i18n="howTo"></p>
+      <ol class="steps">
         <li data-i18n="step1"></li>
         <li data-i18n="step2"></li>
         <li data-i18n="step3"></li>
       </ol>
       <button id="startBtn" class="primary" data-i18n="start"></button>
+      <p class="foot" data-i18n="foot"></p>
     </div>
   </div>
 
   <!-- Shown while the card is not in view -->
-  <div id="scanHint" class="hidden" data-i18n="scanHint"></div>
+  <div id="scanHint" class="hidden"><span class="viewfinder"></span><span data-i18n="scanHint"></span></div>
 
-  <!-- Progress and question panel -->
+  <!-- Step bar and question panel -->
   <div id="topbar" class="hidden">
+    <div class="top-row">
+      <div id="stageName"></div>
+      <button type="button" id="soundBtn" class="icon-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="waves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path class="mute" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="lang small"><button type="button" data-lang="en">EN</button><button type="button" data-lang="hi">हि</button></div>
+    </div>
     <div id="dots"></div>
-    <div id="stageName"></div>
-    <button class="langBtn small" type="button"></button>
   </div>
   <div id="panel" class="hidden">
     <h2 id="title"></h2>
     <p id="text"></p>
     <div id="readings" class="hidden">
-      <div class="reading">
+      <div class="meter">
         <span class="label" data-i18n="moisture"></span>
-        <div class="bar"><div id="moistureFill"></div></div>
-        <span id="moistureValue" class="value"></span>
+        <span class="value"><b id="moistureValue"></b> <span id="moistureTag" class="tag"></span></span>
+        <div class="bar"><div id="moistureFill"></div><i class="threshold"></i></div>
       </div>
-      <div class="reading">
+      <div class="meter">
         <span class="label" data-i18n="ph"></span>
+        <span class="value"><b id="phValue"></b> <span id="phTag" class="tag"></span></span>
         <div class="bar ph"><div id="phMarker"></div></div>
-        <span id="phValue" class="value"></span>
       </div>
     </div>
-    <p id="question"></p>
+    <div id="docSays"><span id="docFace" class="doc"></span><p id="question" class="bubble"></p></div>
     <div id="options"></div>
     <p id="feedback"></p>
     <button id="nextBtn" class="primary hidden"></button>
+  </div>
+
+  <!-- End of the run -->
+  <div id="finale" class="hidden">
+    <h2 data-i18n="summaryTitle"></h2>
+    <p id="finaleOutcome"></p>
+    <div class="stat"><span data-i18n="firstTry"></span><b id="finaleScore"></b></div>
+    <p class="label" data-i18n="ideasTitle"></p>
+    <ol class="steps">
+      <li data-i18n="idea1"></li>
+      <li data-i18n="idea2"></li>
+      <li data-i18n="idea3"></li>
+    </ol>
+    <button id="againBtn" class="primary"></button>
   </div>
 
   <a-scene
@@ -67,22 +91,47 @@
     <!-- Everything inside this entity sits on the card.
          x: left to right, y: up the card, z: out of the card towards the camera.
          The card is 1 unit wide and 0.667 units tall. -->
+    <a-assets>
+      <img id="photoTex" src="./assets/photo-texture.jpg" />
+      <img id="heightTex" src="./assets/height.png" />
+      <img id="plantA" src="./assets/plant-a.png" />
+      <img id="plantB" src="./assets/plant-b.png" />
+      <img id="plantSick" src="./assets/plant-sick.png" />
+      <img id="plantHealed" src="./assets/plant-sick-healed.png" />
+    </a-assets>
+
     <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <!-- The card is a real photo of a soybean field (1 unit wide, 1.334 units tall).
+           x: left to right, y: up the photo, z: out of the photo towards the camera.
+           The photo is raised into 3D, three real plants pop up from it, and the robot drives up the furrow. -->
 
-      <!-- Soil patch around the drooping plant. Its colour shows how wet the soil is. -->
-      <a-circle id="soilPatch" radius="0.11" color="#6d4c41" position="0 0.06 0.002"></a-circle>
+      <!-- The photo itself in 3D: the same picture laid over the card, with the plants pushed up
+           by a height map (assets/height.png), so the crop rows stand out of the paper. -->
+      <a-plane id="relief" width="1" height="1.334" segments-width="150" segments-height="200" position="0 0 0"
+        material="src: #photoTex; displacementMap: #heightTex; displacementScale: 0.05; displacementBias: 0; roughness: 1; metalness: 0"></a-plane>
 
-      <!-- Crop row -->
+      <!-- Soil patch around the sick plant. Its colour shows how wet the soil is. -->
+      <a-circle id="soilPatch" radius="0.06" color="#6d4c41" opacity="0.85" position="-0.024 -0.06 0.004"></a-circle>
+
+      <!-- Real plants cut out of the photo, standing up from where they grow.
+           Each entity sits at the plant's base; the picture leans back from there. -->
       <a-entity id="plants">
-        <a-entity class="plant" position="-0.36 0.06 0"></a-entity>
-        <a-entity class="plant" position="-0.18 0.06 0"></a-entity>
-        <a-entity id="sickPlant" position="0 0.06 0"></a-entity>
-        <a-entity class="plant" position="0.18 0.06 0"></a-entity>
-        <a-entity class="plant" position="0.36 0.06 0"></a-entity>
+        <a-entity class="cutout" position="0.025 0.127 0">
+          <a-entity class="lean" rotation="60 0 0"><a-plane width="0.19" height="0.16" position="0 0.08 0"
+            material="src: #plantA; transparent: true; alphaTest: 0.4; side: double; shader: flat"></a-plane></a-entity>
+        </a-entity>
+        <a-entity id="sickPlant" position="-0.02 -0.093 0">
+          <a-entity class="lean" rotation="35 0 0"><a-plane width="0.24" height="0.2" position="0 0.1 0"
+            material="src: #plantSick; transparent: true; alphaTest: 0.4; side: double; shader: flat"></a-plane></a-entity>
+        </a-entity>
+        <a-entity class="cutout" position="-0.08 -0.333 0">
+          <a-entity class="lean" rotation="60 0 0"><a-plane width="0.32" height="0.22" position="0 0.11 0"
+            material="src: #plantB; transparent: true; alphaTest: 0.4; side: double; shader: flat"></a-plane></a-entity>
+        </a-entity>
       </a-entity>
 
-      <!-- Robot -->
-      <a-entity id="robot" position="-0.5 -0.1 0">
+      <!-- Robot. Turned so its front points up the furrow; scaled to fit between the rows. -->
+      <a-entity id="robot" position="0.1 -0.61 0" rotation="0 0 90" scale="0.8 0.8 0.8">
         <a-box color="#1e88e5" width="0.16" height="0.09" depth="0.06" position="0 0 0.045"></a-box>
         <a-box color="#0d47a1" width="0.14" height="0.07" depth="0.006" position="0 0 0.078"></a-box>
         <a-box color="#263238" width="0.05" height="0.04" depth="0.045" position="0.05 0 0.1"></a-box>
@@ -98,18 +147,19 @@
       </a-entity>
 
       <!-- Reading label that floats above the robot -->
-      <a-entity id="readingLabel" visible="false" position="0 0.24 0.2">
+      <a-entity id="readingLabel" visible="false" position="0.06 0.16 0.25">
         <a-plane color="#ffffff" opacity="0.92" width="0.42" height="0.07"></a-plane>
         <a-text id="readingText" value="" color="#1b5e20" align="center" width="0.75" position="0 0 0.001"></a-text>
       </a-entity>
 
       <!-- Actions -->
-      <a-entity id="water" visible="false" position="0 0.06 0.25">
+      <a-entity id="water" visible="false" position="-0.024 0.007 0.25">
         <a-sphere color="#29b6f6" radius="0.011" position="-0.025 0 0"></a-sphere>
         <a-sphere color="#29b6f6" radius="0.011" position="0.02 0.01 0.04"></a-sphere>
         <a-sphere color="#29b6f6" radius="0.011" position="0 -0.01 0.08"></a-sphere>
       </a-entity>
-      <a-entity id="flag" visible="false" position="0.07 0.09 0">
+
+      <a-entity id="flag" visible="false" position="0.03 0.03 0">
         <a-cylinder color="#5d4037" radius="0.004" height="0.22" rotation="90 0 0" position="0 0 0.11"></a-cylinder>
         <a-plane color="#e53935" width="0.08" height="0.05" rotation="90 0 0" position="0.04 0 0.195"
           animation="property: rotation; from: 90 0 0; to: 90 12 0; dur: 600; dir: alternate; loop: true"></a-plane>
